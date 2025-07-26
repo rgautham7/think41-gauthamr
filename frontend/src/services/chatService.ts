@@ -190,3 +190,13 @@ Could you please provide more specific details about what you're looking for? Fo
 }
 
 export const chatService = new ChatService();
+
+export async function sendMessage(conversationId: number, message: string) {
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conversation_id: conversationId, message }),
+  });
+  if (!res.ok) throw new Error('Failed to send message');
+  return res.json(); // Should return { ai_response: "...", ... }
+}
