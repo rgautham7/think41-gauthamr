@@ -1,74 +1,100 @@
 # backend/app/models.py
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, Text
+
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
-import datetime
-
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    email = Column(String, unique=True, index=True)
-    # Add more fields as per CSV
-
-    conversations = relationship("Conversation", back_populates="user")
-
-class Product(Base):
-    __tablename__ = "products"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    description = Column(Text)
-    price = Column(Float)
-    # Add more fields as per CSV
-
-class Order(Base):
-    __tablename__ = "orders"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    order_date = Column(DateTime, default=datetime.datetime.utcnow)
-    # Add more fields as per CSV
-
-    user = relationship("User")
-    items = relationship("OrderItem", back_populates="order")
-
-class OrderItem(Base):
-    __tablename__ = "order_items"
-    id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id"))
-    product_id = Column(Integer, ForeignKey("products.id"))
-    quantity = Column(Integer)
-
-    order = relationship("Order", back_populates="items")
-    product = relationship("Product")
-
-class InventoryItem(Base):
-    __tablename__ = "inventory_items"
-    id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id"))
-    quantity = Column(Integer)
-    distribution_center_id = Column(Integer, ForeignKey("distribution_centers.id"))
 
 class DistributionCenter(Base):
     __tablename__ = "distribution_centers"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    location = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
 
-class Conversation(Base):
-    __tablename__ = "conversations"
+    products = relationship("Product", back_populates="distribution_center")
+
+class Product(Base):
+    __tablename__ = "products"
     id = Column(Integer, primary_key=True, index=True)
+    cost = Column(Float)
+    category = Column(String)
+    name = Column(String)
+    brand = Column(String)
+    retail_price = Column(Float)
+    department = Column(String)
+    sku = Column(String)
+    distribution_center_id = Column(Integer, ForeignKey("distribution_centers.id"))
+
+    distribution_center = relationship("DistributionCenter", back_populates="products")
+    inventory_items = relationship("InventoryItem", back_populates="product")
+
+class InventoryItem(Base):
+    __tablename__ = "inventory_items"
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"))
+    created_at = Column(DateTime)
+    sold_at = Column(DateTime)
+    cost = Column(Float)
+    product_category = Column(String)
+    product_name = Column(String)
+    product_brand = Column(String)
+    product_retail_price = Column(Float)
+    product_department = Column(String)
+    product_sku = Column(String)
+    product_distribution_center_id = Column(Integer, ForeignKey("distribution_centers.id"))
+
+    product = relationship("Product", back_populates="inventory_items")
+    distribution_center = relationship("DistributionCenter")
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String)
+    last_name = Column(String)
+    email = Column(String)
+    age = Column(Integer)
+    gender = Column(String)
+    state = Column(String)
+    street_address = Column(String)
+    postal_code = Column(String)
+    city = Column(String)
+    country = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    traffic_source = Column(String)
+    created_at = Column(DateTime)
+
+    orders = relationship("Order", back_populates="user")
+
+class Order(Base):
+    __tablename__ = "orders"
+    order_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    status = Column(String)
+    gender = Column(String)
+    created_at = Column(DateTime)
+    returned_at = Column(DateTime)
+    shipped_at = Column(DateTime)
+    delivered_at = Column(DateTime)
+    num_of_item = Column(Integer)
 
-    user = relationship("User", back_populates="conversations")
-    messages = relationship("Message", back_populates="conversation")
+    user = relationship("User", back_populates="orders")
+    order_items = relationship("OrderItem", back_populates="order")
 
-class Message(Base):
-    __tablename__ = "messages"
+class OrderItem(Base):
+    __tablename__ = "order_items"
     id = Column(Integer, primary_key=True, index=True)
-    conversation_id = Column(Integer, ForeignKey("conversations.id"))
-    sender = Column(String)  # 'user' or 'ai'
-    content = Column(Text)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    order_id = Column(Integer, ForeignKey("orders.order_id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    product_id = Column(Integer, ForeignKey("products.id"))
+    inventory_item_id = Column(Integer, ForeignKey("inventory_items.id"))
+    status = Column(String)
+    created_at = Column(DateTime)
+    shipped_at = Column(DateTime)
+    delivered_at = Column(DateTime)
+    returned_at = Column(DateTime)
 
-    conversation = relationship("Conversation", back_populates="messages")
+    order = relationship("Order", back_populates="order_items")
+    user = relationship("User")
+    product = relationship("Product")
+    inventory_item = relationship("InventoryItem")
